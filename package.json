@@ -1,0 +1,11 @@
+{
+    "name": "real-bot",
+    "version": "1.0.0",
+    "description": "",
+    "main": "bot.js",
+    "author": "",
+    "dependencies": {
+        "discord.js": "^11.6.4",
+        "shorthash": "^0.0.2"
+    }
+}

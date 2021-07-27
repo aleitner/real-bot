@@ -1,6 +1,10 @@
 class DadBot {
 
-    HandleMessage(msg) {
+    constructor (client) {
+        this.client = client
+    }
+
+    async HandleMessage(msg) {
     }
 }
 

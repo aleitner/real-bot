@@ -2,24 +2,34 @@ let sh = require("shorthash");
 
 class MirrorBot {
 
-    HandleMessage(msg) {
+    constructor (client) {
+        this.client = client
+    }
+
+    async HandleMessage(msg) {
         let whoRegEx = /^(m|M)irror (m|M)irror on the wall,? who(.+) of (them |us |\w?)?all/;
 
         let found = msg.content.match(whoRegEx);
+
         if (found !== null && found.length >= 4) {
     
+            // description is the text that describes the person
             let description = found[3]
+
+            // Deterministic user by hashing the description
             let id = String2Hex(sh.unique(description.toLowerCase())).replace(/\D/g, '');
+            const list = this.client.guilds.get(msg.guild.id).members.filter(member => !member.user.bot)
+            var memberCount = list.size
+            let user = id % memberCount;
+
             let count = 0;
-            let user = id % msg.guild.memberCount;
-    
-            msg.guild.members.forEach(function (value, key, map) {
+            list.forEach(function (member, key, map) {
                 count++;
                 if (user != (count-1)) {
                     return;
                 }
     
-                msg.channel.send('<@'+value.user.id+'>'+description+' of them all')
+                msg.channel.send('<@'+member.user.id+'>'+description+' of them all')
             })
         }
     }

@@ -1,6 +1,10 @@
 class YanceyGangBot {
 
-    HandleMessage(msg) { 
+    constructor (client) {
+        this.client = client
+    }
+
+    async HandleMessage(msg) { 
         if (!msg.channel.name.includes("yanceygang")) {
             return
         }

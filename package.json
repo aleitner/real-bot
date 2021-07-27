@@ -6,6 +6,7 @@
     "author": "",
     "dependencies": {
         "discord.js": "^11.6.4",
+        "sentiment": "^5.0.2",
         "shorthash": "^0.0.2"
     }
 }

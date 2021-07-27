@@ -3,24 +3,24 @@ const BotRegistrar = require('./bots/botRegistrar');
 const YanceyGangBot = require('./bots/yanceygangbot');
 const MirrorBot = require('./bots/mirrorbot');
 const DadBot = require('./bots/dadbot');
-
-let br = new BotRegistrar();
-br.Register(new YanceyGangBot());
-br.Register(new MirrorBot());
-br.Register(new DadBot());
+// const SentimentAnalysisBot = require('./bots/sentimentanalysisbot');
 
 // Initialize Discord Bot
-var client = new Discord.Client();
+var client = new Discord.Client({fetchAllMembers: true});
+
+let br = new BotRegistrar(client);
+br.Register(new YanceyGangBot(client));
+br.Register(new MirrorBot(client));
+br.Register(new DadBot(client));
+// br.Register(new SentimentAnalysisBot(client));
+
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
 client.on('message', msg => {
-    console.log("Received message: ", msg.content)
-    
     br.HandleMessage(msg);
 });
 
 client.login(process.env.BOT_TOKEN);
-

@@ -28,8 +28,10 @@ class MirrorBot {
                 if (user != (count-1)) {
                     return;
                 }
-    
-                msg.channel.send('<@'+member.user.id+'>'+description+' of them all')
+                // msg.channel.send('<@'+member.user.id+'>'+description+' of them all')
+                msg.channel.send(member.user.username+description+' of them all')
+
+                console.log('[MirrorBot] '+member.user.username+description+' of them all')
             })
         }
     }

@@ -14,6 +14,8 @@ class YanceyGangBot {
         }
 
         msg.delete(1000)
+
+        console.log('[YanceyGangBot] Deleted message "'+msh.content+'"')
     }
 
 }

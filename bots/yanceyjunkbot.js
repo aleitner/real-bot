@@ -11,7 +11,7 @@ class YanceyJunkBot {
             return
         }
 
-        // msg.channel.send(`What Yancey might be trying to say is "${newMessage}".`)
+        // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \nz"${newMessage}".`)
     }
 }
 

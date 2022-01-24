@@ -5,11 +5,17 @@ class YanceyJunkBot {
     }
 
     async HandleMessage(msg) {
-        var newMessage = msg.content.replace(/[^A-Z0-9]+/ig, " ");
-        console.log(newMessage, newMessage.length, msg.content.length, newMessage.length/msg.content.length, 2/3)
-        if (newMessage.length/msg.content.length > 2/3) {
-            return
+        if (msg.content != "!translate") {
+            // return
         }
+
+        console.log(msg.reference)
+
+        const originalMsg = await msg.channel.messages.fetch(msg.reference.messageID);
+
+        console.log(originalMsg.content)
+        
+        var newMessage = msg.content.replace(/[^A-Z0-9]+/ig, " ");
 
         // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \n"${newMessage}".`)
     }

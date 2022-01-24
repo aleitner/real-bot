@@ -5,14 +5,10 @@ class YanceyJunkBot {
     }
 
     async HandleMessage(msg) {
-        const yanceyId = '636380640199049229'
-
-        // If message not from yancey return
-        if (msg.author.id != yanceyId) {
+        var newMessage = msg.replace(/[^A-Z0-9]+/ig, " ");
+        if (newMessage.length < msg.length*2/3 && msg[0] != ':') {
             return
         }
-
-        var newMessage = msg.replace(/[^A-Z0-9]+/ig, " ");
 
         msg.channel.send(`What Yancey might be trying to say is "${newMessage}".`)
     }

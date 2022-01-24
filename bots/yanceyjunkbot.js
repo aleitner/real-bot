@@ -6,12 +6,12 @@ class YanceyJunkBot {
 
     async HandleMessage(msg) {
         var newMessage = msg.content.replace(/[^A-Z0-9]+/ig, " ");
-        console.log(newMessage)
+        console.log(newMessage, newMessage.length, msg.length*2/3)
         if (newMessage.length < msg.length*2/3) {
             return
         }
 
-        // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \nz"${newMessage}".`)
+        // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \n"${newMessage}".`)
     }
 }
 

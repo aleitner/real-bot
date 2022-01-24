@@ -9,15 +9,20 @@ class YanceyJunkBot {
             // return
         }
 
-        console.log(msg.reference)
+        msg.channel.awaitMessages(filter, {
+            max: 1,
+            time: 30000,
+            errors: ['time']
+          })
+          // not the same; from awaitMessages() instead
+          .then(originalMsg => {
+            originalMsg = originalMsg.first()
+            var newMessage = originalMsg.content.replace(/[^A-Z0-9]+/ig, " ");
 
-        const originalMsg = await msg.channel.messages.fetch(msg.reference.messageID);
+            console.log(newMessage)
 
-        console.log(originalMsg.content)
-        
-        var newMessage = msg.content.replace(/[^A-Z0-9]+/ig, " ");
-
-        // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \n"${newMessage}".`)
+          })
+        // msg.reply(`What <@${msg.author.id}> might be trying to say is \n"${newMessage}".`)
     }
 }
 

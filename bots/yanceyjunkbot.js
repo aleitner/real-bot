@@ -5,11 +5,12 @@ class YanceyJunkBot {
     }
 
     async HandleMessage(msg) {
-        if (msg.content != "!translate") {
+        if (msg.content != "!translate" && msg.reference != null) {
             // return
         }
 
-        const repliedTo = await msg.channel.messages.fetch(message.reference.messageID);
+        // Get repliedTo
+        const repliedTo = await msg.channel.messages.fetch(msg.reference.messageID);
         console.log(repliedTo.content)
         var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
 

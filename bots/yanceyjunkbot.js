@@ -17,8 +17,8 @@ class YanceyJunkBot {
         console.log(msg.reference)
 
         // Get repliedTo
-        const repliedTo = await msg.channel.messages.fetch(msg.reference.messageID);
-        console.log(repliedTo[msg.reference.messageID])
+        const repliedTo = await msg.channel.messages.fetch(msg.reference.messageId);
+        console.log(repliedTo)
 
         var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
         // msg.reply(`What <@${repliedTo.author.id}> might be trying to say is \n"${newMessage}".`)

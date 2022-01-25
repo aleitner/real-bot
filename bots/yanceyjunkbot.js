@@ -14,7 +14,7 @@ class YanceyJunkBot {
         console.log(repliedTo.content)
         var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
 
-        // msg.channel.send(`What <@${msg.author.id}> might be trying to say is \n"${newMessage}".`)
+        // msg.reply(`What <@${repliedTo.author.id}> might be trying to say is \n"${newMessage}".`)
     }
 }
 

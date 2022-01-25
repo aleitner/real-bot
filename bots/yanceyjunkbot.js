@@ -5,15 +5,22 @@ class YanceyJunkBot {
     }
 
     async HandleMessage(msg) {
-        if (msg.content != "!translate" && msg.hasOwnProperty('reference')) {
-            // return
+        if (msg.content != "!translate") {
+            return
         }
+
+        if (!msg.hasOwnProperty('reference')) {
+            return
+        }
+
 
         // Get repliedTo
         const repliedTo = await msg.channel.messages.fetch(msg.reference.messageID);
-        var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
+        console.log(repliedTo)
 
         console.log(repliedTo.content)
+
+        var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
         // msg.reply(`What <@${repliedTo.author.id}> might be trying to say is \n"${newMessage}".`)
     }
 }

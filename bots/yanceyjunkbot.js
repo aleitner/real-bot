@@ -12,16 +12,11 @@ class YanceyJunkBot {
         if (!msg.hasOwnProperty('reference')) {
             return
         }
-
-
-        console.log(msg.reference)
-
+        
         // Get repliedTo
         const repliedTo = await msg.channel.messages.fetch(msg.reference.messageId);
-        console.log(repliedTo)
-
         var newMessage = repliedTo.content.replace(/[^A-Z0-9]+/ig, " ");
-        // msg.reply(`What <@${repliedTo.author.id}> might be trying to say is \n"${newMessage}".`)
+        msg.reply(`What <@${repliedTo.author.id}> might be trying to say is \n"${newMessage}".`)
     }
 }
 

@@ -8,5 +8,8 @@
         "discord.js": "^13.6.0",
         "sentiment": "^5.0.2",
         "shorthash": "^0.0.2"
+    },
+    "engines": {
+        "node": "16.9.0"
     }
 }

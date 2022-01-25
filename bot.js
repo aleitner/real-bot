@@ -6,7 +6,7 @@ const YanceyJunkBot = require('./bots/yanceyjunkbot');
 // const SentimentAnalysisBot = require('./bots/sentimentanalysisbot');
 
 // Initialize Discord Bot
-var client = new Discord.Client({fetchAllMembers: true, intents: [Intents.FLAGS.GUILDS]});
+var client = new Discord.Client({fetchAllMembers: true, intents: ["GUILDS", "GUILD_MESSAGES"]});
 
 let br = new BotRegistrar(client);
 br.Register(new YanceyGangBot(client));

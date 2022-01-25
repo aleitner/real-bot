@@ -14,7 +14,7 @@ class YanceyJunkBot {
         }
 
 
-        console.log(msg.reference.messageID)
+        console.log(msg.reference)
 
         // Get repliedTo
         const repliedTo = await msg.channel.messages.fetch(msg.reference.messageID);

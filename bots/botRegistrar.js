@@ -1,23 +1,30 @@
 class BotRegistrar {
     constructor() {
-        this.bots = [];
+        this.bots = new Map();
     }
-
+    
     Register(bot) {
-        if (this.bots.some(registeredBot => registeredBot.constructor.name === bot.constructor.name)) {
-            return
+        if (!this.bots.has(bot.constructor.name)) {
+            this.bots.set(bot.constructor.name, bot);
+            console.log("Registered: ", bot.constructor.name);
         }
-
-        this.bots.push(bot);
-
-        console.log("Registered: ", bot.constructor.name)
     }
-
+    
+    Unregister(bot) {
+        if (this.bots.has(bot.constructor.name)) {
+            this.bots.delete(bot.constructor.name);
+            console.log("Unregistered: ", bot.constructor.name);
+        }
+    }
+    
     HandleMessage(msg) {
         this.bots.forEach(bot => {
-
-            if(typeof bot.HandleMessage == 'function') {
-                bot.HandleMessage(msg);
+            try {
+                if (typeof bot.HandleMessage == 'function') {
+                    bot.HandleMessage(msg);
+                }
+            } catch (error) {
+                console.error(`Error handling message in ${bot.constructor.name}:`, error);
             }
         });
     }

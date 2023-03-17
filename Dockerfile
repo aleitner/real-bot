@@ -14,4 +14,4 @@ COPY . /usr/src/bot
 # Bundle app source
 COPY . .
 
-CMD [ "node", "bot.js" ]
+CMD [ "node", "index.js" ]

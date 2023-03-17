@@ -1,9 +1,9 @@
 const Discord = require('discord.js');
-const BotRegistrar = require('./bots/botRegistrar');
-const YanceyGangBot = require('./bots/yanceygangbot');
-const MirrorBot = require('./bots/mirrorbot');
-const YanceyJunkBot = require('./bots/yanceyjunkbot');
-const ChatGPTBot = require('./bots/chatgptbot');
+const BotRegistrar = require('./src/botRegistrar');
+const YanceyGangBot = require('./src/bots/yanceygangbot');
+const MirrorBot = require('./src/bots/mirrorbot');
+const YanceyJunkBot = require('./src/bots/yanceyjunkbot');
+const ChatGPTBot = require('./src/bots/chatgptbot');
 // const SentimentAnalysisBot = require('./bots/sentimentanalysisbot');
 
 // Initialize Discord Bot

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const CooldownManager = require('./cooldownManager');
+const CooldownManager = require('../utils/cooldownManager');
 
 class ChatGPTBot {
     constructor(client, cooldownSeconds = 10) {

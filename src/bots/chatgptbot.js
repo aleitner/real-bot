@@ -9,32 +9,40 @@ class ChatGPTBot {
         this.cooldownManager = new CooldownManager(cooldownSeconds);
     }
 
-    async HandleMessage(msg) {
+    getHelpText() {
+        return {
+            chatgpt: 'Use !chatgpt <your_question> to ask ChatGPTBot a question.',
+        };
+    }  
+    
+    getRequiredRoles() {
+        return []; // No required roles by default
+    }
+
+    async HandleMessage(msg, serverConfig) {
         if (msg.author.bot) return;
+        if (!msg.content.toLowerCase().startsWith(`${serverConfig.prefix}chatgpt`)) return;
 
-        // A simple check to see if the bot should respond
-        if (msg.content.toLowerCase().startsWith('!chatgpt')) {
-            const userId = msg.author.id;
+        const userId = msg.author.id;
 
-            // Check if the user is on cooldown
-            if (this.cooldownManager.isOnCooldown(userId)) {
-                const remainingTime = this.cooldownManager.remainingTime(userId);
-                msg.reply(`Please wait ${remainingTime.toFixed(1)} seconds before using the !chatgpt command again.`);
-                return;
-            }
+        // Check if the user is on cooldown
+        if (this.cooldownManager.isOnCooldown(userId)) {
+            const remainingTime = this.cooldownManager.remainingTime(userId);
+            msg.reply(`Please wait ${remainingTime.toFixed(1)} seconds before using the !chatgpt command again.`);
+            return;
+        }
 
-            // Set the cooldown for the user
-            this.cooldownManager.setCooldown(userId);
+        // Set the cooldown for the user
+        this.cooldownManager.setCooldown(userId);
 
-            const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
+        const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
 
-            try {
-                const response = await this.callChatGPT(query);
-                msg.channel.send(response);
-            } catch (error) {
-                console.error('Error calling ChatGPT:', error);
-                msg.channel.send('Sorry, I could not get a response from ChatGPT.');
-            }
+        try {
+            const response = await this.callChatGPT(query);
+            msg.channel.send(response);
+        } catch (error) {
+            console.error('Error calling ChatGPT:', error);
+            msg.channel.send('Sorry, I could not get a response from ChatGPT.');
         }
     }
 

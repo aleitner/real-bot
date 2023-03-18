@@ -6,6 +6,16 @@ class MirrorBot {
         this.client = client
     }
 
+    getHelpText() {
+        return {
+            mirror: 'Type: Mirror mirror on the wall, who\'s <your_message> of us all.',
+        };
+    }
+
+    getRequiredRoles() {
+        return []; // No required roles by default
+    }
+
     async HandleMessage(msg) {
         let whoRegEx = /^(m|M)irror (m|M)irror on the wall,? who(.+) of (them |us |\w?)?all/;
 

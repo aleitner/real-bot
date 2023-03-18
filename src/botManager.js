@@ -1,5 +1,4 @@
 const DatabaseManager = require('./utils/databaseManager');
-const ServerConfig = require('./utils/serverConfig');
 
 class BotManager {
     constructor(client) {
@@ -21,12 +20,6 @@ class BotManager {
 
     async HandleMessage(msg) {
         if (msg.author.bot) return;
-
-        const isAdmin = msg.member.permissions.has("ADMINISTRATOR");
-
-        if (!isAdmin) {
-            return;
-        }
 
         const serverConfig = await this.databaseManager.loadServerConfig(msg.guild.id);
         const args = msg.content.slice(serverConfig.prefix.length).trim().split(/ +/);

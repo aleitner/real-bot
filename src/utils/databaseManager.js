@@ -90,7 +90,7 @@ class DatabaseManager {
             return serverConfig;
         } else {
             // If no config is found, create a new one and save it to the database
-            const newConfig = new ServerConfig(guildId);
+            const newConfig = new ServerConfig(guildId, ['ChatGPTBot']);
             await this.saveServerConfig(newConfig);
             return newConfig;
         }

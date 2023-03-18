@@ -10,3 +10,7 @@ processes = []
 
 [experimental]
   auto_rollback = true
+
+[mounts]
+  source="real_bot_sqlite"
+  destination="/mnt/real_bot_sqlite"

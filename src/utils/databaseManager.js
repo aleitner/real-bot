@@ -19,17 +19,17 @@ class DatabaseManager {
     `;
 
     constructor(databaseName = 'botDatabase.sqlite') {
-        this.db = new sqlite3.Database(
-            path.join(__dirname, '..', '..','data', databaseName),
-            sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
-            (err) => {
-                if (err) {
-                    console.error(err.message);
-                } else {
-                    console.log('Connected to the SQLite database.');
-                }
+        const dbUrl = process.env.DATABASE_URL;
+        if (!dbUrl) {
+            throw new Error('DATABASE_URL environment variable not set');
+        }
+        this.db = new sqlite3.Database(dbUrl, (err) => {
+            if (err) {
+                console.error(err.message);
+            } else {
+                console.log('Connected to the SQLite database.');
             }
-        );
+        });
 
         this.initializeDatabase();
     }

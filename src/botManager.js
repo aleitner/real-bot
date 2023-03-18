@@ -131,8 +131,8 @@ class BotManager {
             }
     
             try {
-                if (typeof bot.handleMessage === 'function') {
-                    await bot.handleMessage(msg, serverConfig);
+                if (typeof bot.HandleMessage === 'function') {
+                    await bot.HandleMessage(msg, serverConfig);
                 }
             } catch (error) {
                 console.error(`Error handling message in ${bot.constructor.name}:`, error);

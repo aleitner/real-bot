@@ -22,6 +22,8 @@ class BotManager {
         if (msg.author.bot) return;
 
         const serverConfig = await this.databaseManager.loadServerConfig(msg.guild.id);
+        if (!msg.content.toLowerCase().startsWith(serverConfig.prefix)) return;
+
         const args = msg.content.slice(serverConfig.prefix.length).trim().split(/ +/);
         const command = args.shift().toLowerCase();
 

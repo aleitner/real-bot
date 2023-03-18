@@ -18,12 +18,12 @@ class DatabaseManager {
         VALUES (?, ?, ?)
     `;
 
-    constructor(databaseName = 'botDatabase.sqlite') {
-        const dbUrl = process.env.DATABASE_URL;
+    constructor() {
+        const dbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL : path.join(__dirname, '..', '..','data', 'development.sqlite');
         if (!dbUrl) {
             throw new Error('DATABASE_URL environment variable not set');
         }
-        this.db = new sqlite3.Database(dbUrl, (err) => {
+        this.db = new sqlite3.Database(dbUrl, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             if (err) {
                 console.error(err.message);
             } else {

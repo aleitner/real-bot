@@ -3,7 +3,6 @@ class ServerConfig {
         this.guildId = guildId;
         this.prefix = '!'; // Default prefix for commands
         this.enabledBots = new Set(defaultEnabledBots); // Store the names of supported bots
-
     }
 
     enableBot(botName) {

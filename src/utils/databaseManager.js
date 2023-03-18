@@ -31,9 +31,10 @@ class DatabaseManager {
             CREATE TABLE IF NOT EXISTS server_configs (
                 guild_id TEXT PRIMARY KEY,
                 prefix TEXT NOT NULL,
-                enabled_bots TEXT NOT NULL
+                enabled_bots TEXT NOT NULL,
+                blacklist TEXT NOT NULL
             )
-        `;
+    `;
     }
 
     SELECT_SERVER_CONFIG_SQL() {
@@ -42,8 +43,8 @@ class DatabaseManager {
 
     REPLACE_SERVER_CONFIG_SQL() {
         return `
-            REPLACE INTO server_configs (guild_id, prefix, enabled_bots)
-            VALUES (?, ?, ?)
+            REPLACE INTO server_configs (guild_id, prefix, enabled_bots, blacklist)
+            VALUES (?, ?, ?, ?)
         `;
     }
 
@@ -96,6 +97,7 @@ class DatabaseManager {
             const serverConfig = new ServerConfig(guildId);
             serverConfig.prefix = config.prefix;
             serverConfig.enabledBots = new Set(JSON.parse(config.enabled_bots));
+            serverConfig.blacklist = new Set(JSON.parse(config.blacklist));
             return serverConfig;
         } else {
             const newConfig = new ServerConfig(guildId, ['ChatGPTBot']);
@@ -109,6 +111,7 @@ class DatabaseManager {
             serverConfig.guildId,
             serverConfig.prefix,
             JSON.stringify(Array.from(serverConfig.enabledBots)),
+            JSON.stringify(Array.from(serverConfig.blacklist)),
         ];
 
         await this.run(this.REPLACE_SERVER_CONFIG_SQL(), params);

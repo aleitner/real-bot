@@ -13,4 +13,4 @@ processes = []
 
 [mounts]
   source="real_bot_sqlite"
-  destination="/mnt/real_bot_sqlite"
+  destination="/data/real_bot_sqlite"

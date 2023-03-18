@@ -25,6 +25,7 @@ class BotManager {
         if (msg.author.bot) return;
 
         const serverConfig = await this.databaseManager.loadServerConfig(msg.guild.id);
+        if (serverConfig.blacklist.has(msg.author.id)) return;
         if (!msg.content.toLowerCase().startsWith(serverConfig.prefix)) return;
 
         const args = msg.content.slice(serverConfig.prefix.length).trim().split(/ +/);

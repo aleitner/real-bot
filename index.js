@@ -12,6 +12,12 @@ botManager.Register(new ChatGPTBot(client));
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+
+    // Log the list of servers the bot is in
+    console.log('Servers:');
+    client.guilds.cache.forEach(guild => {
+        console.log(` - ${guild.name} (${guild.id})`);
+    });
 });
 
 client.on('messageCreate', msg => {

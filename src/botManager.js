@@ -8,6 +8,7 @@ class BotManager {
         this.client = client;
         this.databaseManager = new DatabaseManager(databasePath);
         this.serverConfigRepository = new ServerConfigRepository(this.databaseManager);
+        this.serverConfigs = new Map(); // Store server configs
         this.bots = new Map(); // Store registered bots
 
         const botsFolder = path.join(__dirname, 'bots');
@@ -32,11 +33,24 @@ class BotManager {
         return Array.from(this.bots.keys());
     }
 
+    async loadServerConfig(guildId) {
+        if (!this.serverConfigs.has(guildId)) {
+            const serverConfig = await this.serverConfigRepository.loadServerConfig(guildId);
+            this.serverConfigs.set(guildId, serverConfig);
+        }
+        return this.serverConfigs.get(guildId);
+    }
+
+    async saveServerConfig(guildId, serverConfig) {
+        this.serverConfigs.set(guildId, serverConfig);
+        await this.serverConfigRepository.saveServerConfig(serverConfig);
+    }
+
     // Handle incoming messages and dispatch commands
     async handleMessage(msg) {
         if (msg.author.bot) return;
 
-        const serverConfig = await this.serverConfigRepository.loadServerConfig(msg.guild.id);
+        const serverConfig = await this.loadServerConfig(msg.guild.id);
         if (serverConfig.isUserBlacklisted(msg.author.id)) return;
         if (!msg.content.toLowerCase().startsWith(serverConfig.prefix)) return;
 
@@ -101,7 +115,7 @@ class BotManager {
     
         if (availableBots.includes(botName)) {
             serverConfig.enableBot(botName);
-            this.serverConfigRepository.saveServerConfig(serverConfig);
+            this.saveServerConfig(msg.guild.id, serverConfig);
             msg.reply(`Bot '${botName}' has been added to the supported bots list.`);
         } else {
             msg.reply(`Bot '${botName}' does not exist. Please check the available bots with the 'list-available-bots' command.`);
@@ -112,7 +126,7 @@ class BotManager {
         if (!msg.member.permissions.has("ADMINISTRATOR")) return;
         const botName = args[0];
         serverConfig.disableBot(botName);
-        this.serverConfigRepository.saveServerConfig(serverConfig);
+        this.saveServerConfig(msg.guild.id, serverConfig);
         msg.reply(`Bot '${botName}' has been removed from the supported bots list.`);
     }
 
@@ -140,7 +154,7 @@ class BotManager {
         }
 
         serverConfig.addToBlacklist(user.id);
-        this.serverConfigRepository.saveServerConfig(serverConfig);
+        this.saveServerConfig(msg.guild.id, serverConfig);
         msg.reply(`User '${user.username}' has been added to the blacklist.`);
     }
 
@@ -155,7 +169,7 @@ class BotManager {
         }
 
         serverConfig.removeFromBlacklist(user.id);
-        this.serverConfigRepository.saveServerConfig(serverConfig);
+        this.saveServerConfig(msg.guild.id, serverConfig);
         msg.reply(`User '${user.username}' has been removed from the blacklist.`);
     }
 

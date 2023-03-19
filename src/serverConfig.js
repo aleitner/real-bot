@@ -21,6 +21,19 @@ class ServerConfig {
     listEnabledBots() {
         return Array.from(this.enabledBots);
     }
+
+    addToBlacklist(userId) {
+        this.blacklist.add(userId);
+    }
+
+    removeFromBlacklist(userId) {
+        this.blacklist.delete(userId);
+    }
+
+    isUserBlacklisted(userId) {
+        return this.blacklist.has(userId);
+    }
+
 }
 
 module.exports = ServerConfig;

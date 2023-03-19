@@ -14,4 +14,13 @@ COPY . /usr/src/bot
 # Bundle app source
 COPY . .
 
-CMD [ "node", "index.js" ]
+# Create start.sh script
+RUN echo "#!/bin/bash" > start.sh
+RUN echo "node migrate.js" >> start.sh
+RUN echo "node index.js" >> start.sh
+
+# Make start.sh executable
+RUN chmod +x start.sh
+
+# Run start.sh
+CMD ["./start.sh"]

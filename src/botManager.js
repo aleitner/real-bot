@@ -1,9 +1,12 @@
-const DatabaseManager = require('./utils/databaseManager');
+const DatabaseManager = require('./db/databaseManager');
+const ServerConfigRepository = require('./db/serverConfigRepository');
 
 class BotManager {
-    constructor(client) {
+    constructor(client, databasePath) {
         this.client = client;
-        this.databaseManager = new DatabaseManager();
+        this.databaseManager = new DatabaseManager(databasePath);
+        this.serverConfigRepository = new ServerConfigRepository(this.databaseManager);
+
         this.bots = new Map(); // Store registered bots
     }
 
@@ -24,8 +27,8 @@ class BotManager {
     async HandleMessage(msg) {
         if (msg.author.bot) return;
 
-        const serverConfig = await this.databaseManager.loadServerConfig(msg.guild.id);
-        if (serverConfig.blacklist.has(msg.author.id)) return;
+        const serverConfig = await this.serverConfigRepository.loadServerConfig(msg.guild.id);
+        if (serverConfig.isUserBlacklisted(msg.author.id)) return;
         if (!msg.content.toLowerCase().startsWith(serverConfig.prefix)) return;
 
         const args = msg.content.slice(serverConfig.prefix.length).trim().split(/ +/);
@@ -89,7 +92,7 @@ class BotManager {
     
         if (availableBots.includes(botName)) {
             serverConfig.enableBot(botName);
-            this.databaseManager.saveServerConfig(serverConfig);
+            this.serverConfigRepository.saveServerConfig(serverConfig);
             msg.reply(`Bot '${botName}' has been added to the supported bots list.`);
         } else {
             msg.reply(`Bot '${botName}' does not exist. Please check the available bots with the 'list-available-bots' command.`);
@@ -100,7 +103,7 @@ class BotManager {
         if (!msg.member.permissions.has("ADMINISTRATOR")) return;
         const botName = args[0];
         serverConfig.disableBot(botName);
-        this.databaseManager.saveServerConfig(serverConfig);
+        this.serverConfigRepository.saveServerConfig(serverConfig);
         msg.reply(`Bot '${botName}' has been removed from the supported bots list.`);
     }
 
@@ -127,8 +130,8 @@ class BotManager {
             return;
         }
 
-        serverConfig.blacklist.add(user.id);
-        this.databaseManager.saveServerConfig(serverConfig);
+        serverConfig.addToBlacklist(user.id);
+        this.serverConfigRepository.saveServerConfig(serverConfig);
         msg.reply(`User '${user.username}' has been added to the blacklist.`);
     }
 
@@ -142,8 +145,8 @@ class BotManager {
             return;
         }
 
-        serverConfig.blacklist.delete(user.id);
-        this.databaseManager.saveServerConfig(serverConfig);
+        serverConfig.removeFromBlacklist(user.id);
+        this.serverConfigRepository.saveServerConfig(serverConfig);
         msg.reply(`User '${user.username}' has been removed from the blacklist.`);
     }
 

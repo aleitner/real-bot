@@ -6,7 +6,9 @@ const ChatGPTBot = require('./src/bots/chatgptbot');
 // Initialize Discord Bot
 var client = new Discord.Client({fetchAllMembers: true, intents: ["GUILDS", "GUILD_MESSAGES"]});
 
-let botManager = new BotManager(client);
+const databasePath = process.env.DATABASE_URL ? process.env.DATABASE_URL : path.join(__dirname, '..', '..', 'data', 'development.sqlite');
+
+let botManager = new BotManager(client, databasePath);
 botManager.Register(new MirrorBot(client));
 botManager.Register(new ChatGPTBot(client));
 

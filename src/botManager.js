@@ -1,17 +1,26 @@
 const DatabaseManager = require('./db/databaseManager');
-const ServerConfigRepository = require('./db/serverConfigRepository');
+const ServerConfigRepository = require('./repositories/serverConfigRepository');
+const path = require('path');
+const fs = require('fs');
 
 class BotManager {
     constructor(client, databasePath) {
         this.client = client;
         this.databaseManager = new DatabaseManager(databasePath);
         this.serverConfigRepository = new ServerConfigRepository(this.databaseManager);
-
         this.bots = new Map(); // Store registered bots
+
+        const botsFolder = path.join(__dirname, 'bots');
+        fs.readdirSync(botsFolder).forEach(file => {
+            if (file.endsWith('bot.js')) {
+                const BotClass = require(path.join(botsFolder, file));
+                this.register(new BotClass(client));
+            }
+        });
     }
 
     // Register a new bot instance
-    Register(bot) {
+    register(bot) {
         if (!this.bots.has(bot.constructor.name)) {
             this.bots.set(bot.constructor.name, bot);
             console.log("Registered: ", bot.constructor.name);
@@ -24,7 +33,7 @@ class BotManager {
     }
 
     // Handle incoming messages and dispatch commands
-    async HandleMessage(msg) {
+    async handleMessage(msg) {
         if (msg.author.bot) return;
 
         const serverConfig = await this.serverConfigRepository.loadServerConfig(msg.guild.id);
@@ -190,8 +199,8 @@ class BotManager {
             }
     
             try {
-                if (typeof bot.HandleMessage === 'function') {
-                    await bot.HandleMessage(msg, serverConfig);
+                if (typeof bot.handleMessage === 'function') {
+                    await bot.handleMessage(msg, serverConfig);
                 }
             } catch (error) {
                 console.error(`Error handling message in ${bot.constructor.name}:`, error);

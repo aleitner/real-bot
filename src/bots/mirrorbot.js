@@ -16,7 +16,7 @@ class MirrorBot {
         return []; // No required roles by default
     }
 
-    async HandleMessage(msg) {
+    async handleMessage(msg) {
         let whoRegEx = /^(m|M)irror (m|M)irror on the wall,? who(.+) of (them |us |\w?)?all/;
 
         let found = msg.content.match(whoRegEx);

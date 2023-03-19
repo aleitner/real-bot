@@ -19,7 +19,7 @@ class ChatGPTBot {
         return []; // No required roles by default
     }
 
-    async HandleMessage(msg, serverConfig) {
+    async handleMessage(msg, serverConfig) {
         if (msg.author.bot) return;
         if (!msg.content.toLowerCase().startsWith(`${serverConfig.prefix}chatgpt`)) return;
 
@@ -66,7 +66,7 @@ class ChatGPTBot {
             temperature: 1,
         };
 
-        const response = await axios.post(url, data, { headers, timeout: 5000 });
+        const response = await axios.post(url, data, { headers, timeout: 10000 });
 
         console.log(response.data.choices[0])
         return response.data.choices[0].message.content.trim();

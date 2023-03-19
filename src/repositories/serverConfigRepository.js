@@ -1,4 +1,4 @@
-const ServerConfig = require('../serverConfig');
+const ServerConfig = require('../models/serverConfig');
 
 class ServerConfigRepository {
     constructor(databaseManager) {

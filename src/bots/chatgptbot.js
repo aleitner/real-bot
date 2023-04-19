@@ -65,7 +65,7 @@ class ChatGPTBot {
         }
 
         try {
-            const response = await this.callChatGPT(query);
+            const response = await this.callChatGPT(query, msg.guild.id);
             msg.channel.send(response);
         } catch (error) {
             console.error('Error calling ChatGPT:', error);
@@ -73,7 +73,7 @@ class ChatGPTBot {
         }
     }
 
-    async callChatGPT(prompt) {
+    async callChatGPT(prompt, serverId) {
         const url = 'https://api.openai.com/v1/chat/completions';
 
         const headers = {

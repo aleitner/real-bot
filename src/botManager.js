@@ -98,7 +98,7 @@ class BotManager {
     
         this.bots.forEach((bot) => {
             if (serverConfig.isBotEnabled(bot.constructor.name)) {
-                const helpTexts = bot.getHelpText();
+                const helpTexts = bot.getHelpText(msg.member);
                 for (const [command, description] of Object.entries(helpTexts)) {
                     botCommands.push(`- !${command} : ${description}`);
                 }

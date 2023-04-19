@@ -10,10 +10,17 @@ class ChatGPTBot {
         this.serverContext = {};
     }
 
-    getHelpText() {
-        return {
+    getHelpText(member) {
+        const helpText = {
             chatgpt: 'Use !chatgpt <your_question> to ask ChatGPTBot a question.',
         };
+
+        // Include set-context command for admins
+        if (this.isAdmin(member)) {
+            helpText['set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
+        }
+
+        return helpText;
     }  
     
     getRequiredRoles() {

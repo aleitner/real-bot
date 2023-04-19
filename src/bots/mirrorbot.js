@@ -6,7 +6,7 @@ class MirrorBot {
         this.client = client
     }
 
-    getHelpText() {
+    getHelpText(member) {
         return {
             mirror: 'Type: Mirror mirror on the wall, who\'s <your_message> of us all.',
         };

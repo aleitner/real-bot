@@ -17,7 +17,7 @@ class ChatGPTBot {
 
         // Include set-context command for admins
         if (this.isAdmin(member)) {
-            helpText['set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
+            helpText['chatgpt set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
         }
 
         return helpText;

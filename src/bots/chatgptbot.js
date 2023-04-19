@@ -2,11 +2,12 @@ const axios = require('axios');
 const CooldownManager = require('../utils/cooldownManager');
 
 class ChatGPTBot {
-    constructor(client, cooldownSeconds = 10) {
+    constructor(client, cooldownSeconds = 15) {
         this.client = client;
         this.apiKey = process.env.CHATGPT_API_KEY;
         this.organizationId = process.env.CHATGPT_ORGANIZATION_ID;
         this.cooldownManager = new CooldownManager(cooldownSeconds);
+        this.serverContext = {};
     }
 
     getHelpText() {
@@ -17,6 +18,16 @@ class ChatGPTBot {
     
     getRequiredRoles() {
         return []; // No required roles by default
+    }
+
+    // Function to set a message associated with a Discord server ID in the context
+    setContextMessage(serverId, message) {
+        this.serverContext[serverId] = message;
+    }
+
+    isAdmin(member) {
+        // Customize this function to check for admin role in your server
+        return member.hasPermission('ADMINISTRATOR');
     }
 
     async handleMessage(msg, serverConfig) {
@@ -36,6 +47,15 @@ class ChatGPTBot {
         this.cooldownManager.setCooldown(userId);
 
         const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
+
+        // Check if the message is from an admin and starts with 'set-context'
+        if (this.isAdmin(msg.member) && query.toLowerCase().startsWith('set-context')) {
+            const contextMessage = query.slice(12).trim(); // Remove the 'set-context' prefix
+            const serverId = msg.guild.id;
+            this.setContextMessage(serverId, contextMessage);
+            msg.reply('Context message has been updated.');
+            return;
+        }
 
         try {
             const response = await this.callChatGPT(query);
@@ -58,7 +78,7 @@ class ChatGPTBot {
         const data = {
             model: "gpt-4",
             messages: [
-                {role: 'system', content: 'You are a helpful assistant.'},
+                {role: 'system', content: this.serverContext[serverId]},
                 {role: 'user', content: prompt}
             ],
             max_tokens: 50,

@@ -34,7 +34,7 @@ class ChatGPTBot {
 
     isAdmin(member) {
         // Customize this function to check for admin role in your server
-        return member.hasPermission('ADMINISTRATOR');
+        return member.permissions.has("ADMINISTRATOR");
     }
 
     async handleMessage(msg, serverConfig) {

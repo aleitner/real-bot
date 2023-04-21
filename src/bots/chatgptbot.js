@@ -1,15 +1,29 @@
 const axios = require('axios');
 const CooldownManager = require('../utils/cooldownManager');
 
+/**
+ * Class representing a ChatGPTBot.
+ */
 class ChatGPTBot {
-    constructor(client, cooldownSeconds = 15) {
+    /**
+     * Create a ChatGPTBot.
+     * @param {Object} client - Discord client.
+     * @param {number} cooldownSeconds - Cooldown for the chat command.
+     */
+    constructor(client, cooldownSeconds = 10) {
         this.client = client;
         this.apiKey = process.env.CHATGPT_API_KEY;
         this.organizationId = process.env.CHATGPT_ORGANIZATION_ID;
         this.cooldownManager = new CooldownManager(cooldownSeconds);
-        this.serverContext = {};
+        this.config = {};
+        this.defaultContext = 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
     }
 
+    /**
+     * Get help text for commands.
+     * @param {Object} member - The Discord member object.
+     * @return {Object} Help text object with command explanations.
+     */
     getHelpText(member) {
         const helpText = {
             chatgpt: 'Use !chatgpt <your_question> to ask ChatGPTBot a question.',
@@ -22,30 +36,77 @@ class ChatGPTBot {
         }
 
         return helpText;
-    }  
-    
+    }
+
+    /**
+     * Get required roles for usage.
+     * @return {Array} An empty array, as there are no required roles by default.
+     */
     getRequiredRoles() {
         return []; // No required roles by default
     }
 
-    // Function to set a message associated with a Discord server ID in the context
+    /**
+     * Set a context message for a server.
+     * @param {string} serverId - The Discord server ID.
+     * @param {string} message - The new context message to set.
+     */
     setContextMessage(serverId, message) {
-        this.serverContext[serverId] = message;
+        this.config[serverId].serverContext = message;
     }
 
-    // Function to append a message associated with a Discord server ID in the context
+    /**
+     * Append a message to the context for a server.
+     * @param {string} serverId - The Discord server ID.
+     * @param {string} message - The message to append to the existing context.
+     */
     appendContextMessage(serverId, message) {
-        this.serverContext[serverId] = `${this.serverContext[serverId]} ${message}`
+        this.config[serverId].serverContext = `${this.config[serverId].serverContext} ${message}`
     }
 
+    /**
+     * Check if a member has an admin role.
+     * @param {Object} member - The Discord member object.
+     * @return {boolean} True if member is an admin, otherwise false.
+     */
     isAdmin(member) {
         // Customize this function to check for admin role in your server
         return member.permissions.has("ADMINISTRATOR");
     }
 
-    async handleMessage(msg, serverConfig) {
+    /**
+     * Update the message history for a server.
+     * @param {string} serverId - The Discord server ID.
+     * @param {Object} userMessage - The user message object.
+     * @param {Object} systemMessage - The system message object.
+     */
+    updateMessageHistory(serverId, userMessage, systemMessage) {
+        if (!this.config[serverId].serverMessageHistory) {
+            this.config[serverId].serverMessageHistory = [];
+        }
+
+        const messages = [
+            userMessage,
+            systemMessage
+        ];
+
+        // Add new messages to the beginning of the messages array
+        this.config[serverId].serverMessageHistory.unshift(...messages);
+
+        // If there are more than 15 user messages, remove the oldest ones
+        if (this.config[serverId].serverMessageHistory.length > 30) {
+            this.config[serverId].serverMessageHistory.length = 30;
+        }
+    }
+
+    /**
+     * Handle incoming user messages.
+     * @param {Object} msg - The user message object.
+     * @param {Object} config - The server config.
+     */
+    async handleMessage(msg, config) {
         if (msg.author.bot) return;
-        if (!msg.content.toLowerCase().startsWith(`${serverConfig.prefix}chatgpt`)) return;
+        if (!msg.content.toLowerCase().startsWith(`${config.prefix}chatgpt`)) return;
 
         const userId = msg.author.id;
 
@@ -81,8 +142,12 @@ class ChatGPTBot {
             }
         }
 
+        const formattedMessage = {role: 'user', content: `@${msg.author.username}#${msg.author.discriminator}: ${query}`};
+
         try {
-            const response = await this.callChatGPT(query, msg.guild.id);
+            const response = await this.callChatGPT(formattedMessage, msg.guild.id);
+            const formattedResponse = { role: 'system', content: response };
+            this.updateMessageHistory(msg.guild.id, formattedMessage, formattedResponse);
             msg.channel.send(response);
         } catch (error) {
             console.error('Error calling ChatGPT:', error);
@@ -90,7 +155,22 @@ class ChatGPTBot {
         }
     }
 
-    async callChatGPT(prompt, serverId) {
+    /**
+     * Call the ChatGPT API.
+     * @param {Object} message - The user message object.
+     * @param {string} serverId - The Discord server ID.
+     * @return {Promise<string>} The response from the ChatGPT API.
+     */
+    async callChatGPT(message, serverId) {
+        if (!this.config[serverId]) {
+            // Initialize the server config if it does not exist
+            this.config[serverId] = {
+              serverContext: this.defaultContext,
+              serverMessageHistory: [],
+              temperature: 1
+            };
+        }
+
         const url = 'https://api.openai.com/v1/chat/completions';
 
         const headers = {
@@ -98,19 +178,18 @@ class ChatGPTBot {
             'Authorization': `Bearer ${this.apiKey}`,
             'OpenAI-Organization': this.organizationId
         };
-        
-        const defaultMessage = 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
-        const context = this.serverContext[serverId] && this.serverContext[serverId].trim() !== "" ? this.serverContext[serverId] : defaultMessage;
 
         const data = {
             model: "gpt-4",
             messages: [
-                {role: 'system', content: context},
-                {role: 'user', content: prompt}
+                {role: 'system', content: this.config[serverId].serverContext},
+                {role: 'system', content: 'Multiple users will sending you messages and all messages will be prefixed with "@userid: " allowing you to know who sent the message.'},
+                ...this.config[serverId].serverMessageHistory,
+                message
             ],
             max_tokens: 50,
             n: 1,
-            temperature: 1,
+            temperature: this.config[serverId].temperature,
         };
 
         const response = await axios.post(url, data, { headers, timeout: 30000 });

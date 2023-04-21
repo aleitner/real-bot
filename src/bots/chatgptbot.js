@@ -18,6 +18,7 @@ class ChatGPTBot {
         // Include set-context command for admins
         if (this.isAdmin(member)) {
             helpText['chatgpt set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
+            helpText['chatgpt append-context'] = "Use !chatgpt append-context 'message' to add to the context message for the server.";
         }
 
         return helpText;
@@ -30,6 +31,11 @@ class ChatGPTBot {
     // Function to set a message associated with a Discord server ID in the context
     setContextMessage(serverId, message) {
         this.serverContext[serverId] = message;
+    }
+
+    // Function to append a message associated with a Discord server ID in the context
+    appendContextMessage(serverId, message) {
+        this.serverContext[serverId] = `${this.serverContext[serverId]} ${message}`
     }
 
     isAdmin(member) {
@@ -55,12 +61,22 @@ class ChatGPTBot {
 
         const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
 
-        // Check if the message is from an admin and starts with 'set-context'
-        if (this.isAdmin(msg.member) && query.toLowerCase().startsWith('set-context')) {
-            const contextMessage = query.slice(12).trim(); // Remove the 'set-context' prefix
+        // Check if the message is from an admin
+        if (this.isAdmin(msg.member)) {
             const serverId = msg.guild.id;
-            this.setContextMessage(serverId, contextMessage);
-            msg.reply('Context message has been updated.');
+
+            // Check if the message starts with 'set-context'
+            if (query.toLowerCase().startsWith('set-context')) {
+                const contextMessage = query.slice(11).trim(); // Remove the 'set-context' prefix
+                this.setContextMessage(serverId, contextMessage);
+                msg.reply('Context message has been set.');
+            }
+            // Check if the message starts with 'append-context'
+            else if (query.toLowerCase().startsWith('append-context')) {
+                const contextMessage = query.slice(13).trim(); // Remove the 'append-context' prefix
+                this.appendContextMessage(serverId, contextMessage);
+                msg.reply('Context message has been updated.');
+            }
             return;
         }
 
@@ -81,11 +97,13 @@ class ChatGPTBot {
             'Authorization': `Bearer ${this.apiKey}`,
             'OpenAI-Organization': this.organizationId
         };
-
+        
+        const context = this.serverContext[serverId] != "" ? this.serverContext[serverId] : 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
+        
         const data = {
             model: "gpt-4",
             messages: [
-                {role: 'system', content: this.serverContext[serverId]},
+                {role: 'system', content: context},
                 {role: 'user', content: prompt}
             ],
             max_tokens: 50,

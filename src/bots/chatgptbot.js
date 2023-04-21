@@ -113,6 +113,7 @@ class ChatGPTBot {
         if (!msg.content.toLowerCase().startsWith(`${config.prefix}chatgpt`)) return;
 
         const userId = msg.author.id;
+        const serverId = msg.guild.id;
 
         // Check if the user is on cooldown
         if (this.cooldownManager.isOnCooldown(userId)) {
@@ -139,7 +140,6 @@ class ChatGPTBot {
 
         // Check if the message is from an admin
         if (this.isAdmin(msg.member)) {
-            const serverId = msg.guild.id;
 
             // Check if the message starts with 'set-context'
             if (query.toLowerCase().startsWith('set-context')) {

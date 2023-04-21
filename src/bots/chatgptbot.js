@@ -189,7 +189,7 @@ class ChatGPTBot {
             model: "gpt-4",
             messages: [
                 {role: 'system', content: this.config[serverId].serverContext},
-                {role: 'system', content: secretContext},
+                {role: 'system', content: this.secretContext},
                 {role: 'system', content: `You will respond within the max_token limit of ${this.config[serverId].max_tokens}.`},
                 ...this.config[serverId].serverMessageHistory,
                 message

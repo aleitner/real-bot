@@ -16,7 +16,11 @@ class ChatGPTBot {
         this.organizationId = process.env.CHATGPT_ORGANIZATION_ID;
         this.cooldownManager = new CooldownManager(cooldownSeconds);
         this.config = {};
-        this.defaultContext = 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
+        this.defaultTemperature = 1;
+        this.defaultTokens = 50;
+        this.defaultN = 1;
+        this.defaultContext = 'You are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
+        this.secretContext = 'Multiple users will sending you messages and all messages will be prefixed with "user: " allowing you to know who sent the message. You will not respond in that same format.'
     }
 
     /**
@@ -167,7 +171,9 @@ class ChatGPTBot {
             this.config[serverId] = {
               serverContext: this.defaultContext,
               serverMessageHistory: [],
-              temperature: 1
+              temperature: this.defaultTemperature,
+              max_tokens: this.defaultTokens,
+              n: this.defaultN
             };
         }
 
@@ -183,12 +189,13 @@ class ChatGPTBot {
             model: "gpt-4",
             messages: [
                 {role: 'system', content: this.config[serverId].serverContext},
-                {role: 'system', content: 'Multiple users will sending you messages and all messages will be prefixed with "user: " allowing you to know who sent the message. You will never respond in that same format unless requested.'},
+                {role: 'system', content: secretContext},
+                {role: 'system', content: `You will respond within the max_token limit of ${this.config[serverId].max_tokens}.`},
                 ...this.config[serverId].serverMessageHistory,
                 message
             ],
-            max_tokens: 50,
-            n: 1,
+            max_tokens: this.config[serverId].max_tokens,
+            n: this.config[serverId].n,
             temperature: this.config[serverId].temperature,
         };
 

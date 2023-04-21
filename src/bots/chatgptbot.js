@@ -70,14 +70,15 @@ class ChatGPTBot {
                 const contextMessage = query.slice(11).trim(); // Remove the 'set-context' prefix
                 this.setContextMessage(serverId, contextMessage);
                 msg.reply('Context message has been set.');
+                return;
             }
             // Check if the message starts with 'append-context'
             else if (query.toLowerCase().startsWith('append-context')) {
                 const contextMessage = query.slice(13).trim(); // Remove the 'append-context' prefix
                 this.appendContextMessage(serverId, contextMessage);
                 msg.reply('Context message has been updated.');
+                return;
             }
-            return;
         }
 
         try {

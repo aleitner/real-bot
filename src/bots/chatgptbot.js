@@ -93,7 +93,7 @@ class ChatGPTBot {
             temperature: 1,
         };
 
-        const response = await axios.post(url, data, { headers, timeout: 10000 });
+        const response = await axios.post(url, data, { headers, timeout: 30000 });
 
         console.log(response.data.choices[0])
         return response.data.choices[0].message.content.trim();

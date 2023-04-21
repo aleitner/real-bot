@@ -142,7 +142,7 @@ class ChatGPTBot {
             }
         }
 
-        const formattedMessage = {role: 'user', content: `@${msg.author.username}#${msg.author.discriminator}: ${query}`};
+        const formattedMessage = {role: 'user', content: `${msg.author.username}: ${query}`};
 
         try {
             const response = await this.callChatGPT(formattedMessage, msg.guild.id);
@@ -183,7 +183,7 @@ class ChatGPTBot {
             model: "gpt-4",
             messages: [
                 {role: 'system', content: this.config[serverId].serverContext},
-                {role: 'system', content: 'Multiple users will sending you messages and all messages will be prefixed with "@userid: " allowing you to know who sent the message.'},
+                {role: 'system', content: 'Multiple users will sending you messages and all messages will be prefixed with "user: " allowing you to know who sent the message. You will never respond in that same format unless requested.'},
                 ...this.config[serverId].serverMessageHistory,
                 message
             ],

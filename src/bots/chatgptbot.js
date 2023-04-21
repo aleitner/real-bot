@@ -126,6 +126,17 @@ class ChatGPTBot {
 
         const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
 
+        if (!this.config[serverId]) {
+            // Initialize the server config if it does not exist
+            this.config[serverId] = {
+              serverContext: this.defaultContext,
+              serverMessageHistory: [],
+              temperature: this.defaultTemperature,
+              max_tokens: this.defaultTokens,
+              n: this.defaultN
+            };
+        }
+
         // Check if the message is from an admin
         if (this.isAdmin(msg.member)) {
             const serverId = msg.guild.id;
@@ -166,16 +177,6 @@ class ChatGPTBot {
      * @return {Promise<string>} The response from the ChatGPT API.
      */
     async callChatGPT(message, serverId) {
-        if (!this.config[serverId]) {
-            // Initialize the server config if it does not exist
-            this.config[serverId] = {
-              serverContext: this.defaultContext,
-              serverMessageHistory: [],
-              temperature: this.defaultTemperature,
-              max_tokens: this.defaultTokens,
-              n: this.defaultN
-            };
-        }
 
         const url = 'https://api.openai.com/v1/chat/completions';
 

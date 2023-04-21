@@ -99,8 +99,9 @@ class ChatGPTBot {
             'OpenAI-Organization': this.organizationId
         };
         
-        const context = this.serverContext[serverId] != "" ? this.serverContext[serverId] : 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
-        
+        const defaultMessage = 'you are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
+        const context = this.serverContext[serverId] && this.serverContext[serverId].trim() !== "" ? this.serverContext[serverId] : defaultMessage;
+
         const data = {
             model: "gpt-4",
             messages: [

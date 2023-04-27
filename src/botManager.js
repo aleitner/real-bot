@@ -6,8 +6,8 @@ const fs = require('fs');
 class BotManager {
     constructor(client, databasePath) {
         this.client = client;
-        this.databaseManager = new DatabaseManager(databasePath);
-        this.serverConfigRepository = new ServerConfigRepository(this.databaseManager);
+        const databaseManager = new DatabaseManager(databasePath);
+        this.serverConfigRepository = new ServerConfigRepository(databaseManager);
         this.serverConfigs = new Map(); // Store server configs
         this.bots = new Map(); // Store registered bots
 
@@ -15,7 +15,7 @@ class BotManager {
         fs.readdirSync(botsFolder).forEach(file => {
             if (file.endsWith('bot.js')) {
                 const BotClass = require(path.join(botsFolder, file));
-                this.register(new BotClass(client));
+                this.register(new BotClass(client, databaseManager));
             }
         });
     }
@@ -74,6 +74,20 @@ class BotManager {
         } else {
             this.handleBotCommands(msg, serverConfig);
         }
+    }
+
+    async handleNewGuild(guild) {
+        console.log("Joined a new server...");
+        
+        this.bots.forEach(async (bot) => {
+            try {
+                if (typeof bot.handleNewGuild === 'function') {
+                    await bot.handleNewGuild(guild);
+                }
+            } catch (error) {
+                console.error(`Error handling new guild in ${bot.constructor.name}:`, error);
+            }
+        })
     }
 
     handleHelpCommand(msg, serverConfig) {

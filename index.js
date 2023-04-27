@@ -21,4 +21,8 @@ client.on('messageCreate', msg => {
     botManager.handleMessage(msg);
 });
 
+client.on('guildCreate', (guild) => {
+    botManager.handleNewGuild(guild);
+});
+
 client.login(process.env.BOT_TOKEN);

@@ -1,5 +1,7 @@
 const axios = require('axios');
 const CooldownManager = require('../utils/cooldownManager');
+const ChatGPTBotConfig = require('../models/chatgptbotConfig');
+const ChatGPTBotRepository = require('../repositories/chatgptbotRepository')
 
 /**
  * Class representing a ChatGPTBot.
@@ -10,16 +12,13 @@ class ChatGPTBot {
      * @param {Object} client - Discord client.
      * @param {number} cooldownSeconds - Cooldown for the chat command.
      */
-    constructor(client, cooldownSeconds = 10) {
+    constructor(client, databaseManager, cooldownSeconds = 10) {
         this.client = client;
         this.apiKey = process.env.CHATGPT_API_KEY;
         this.organizationId = process.env.CHATGPT_ORGANIZATION_ID;
         this.cooldownManager = new CooldownManager(cooldownSeconds);
+        this.repository = new ChatGPTBotRepository(databaseManager);
         this.config = {};
-        this.defaultTemperature = 1;
-        this.defaultTokens = 50;
-        this.defaultN = 1;
-        this.defaultContext = 'You are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
         this.secretContext = 'Multiple users will sending you messages and all messages will be prefixed with "user: " allowing you to know who sent the message. You will not respond in that same format.'
     }
 
@@ -30,42 +29,21 @@ class ChatGPTBot {
      */
     getHelpText(member) {
         const helpText = {
-            chatgpt: 'Use !chatgpt <your_question> to ask ChatGPTBot a question.',
+            chatgpt: "Use !chatgpt 'your_question' to ask ChatGPTBot a question.",
         };
 
         // Include set-context command for admins
         if (this.isAdmin(member)) {
             helpText['chatgpt set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
             helpText['chatgpt append-context'] = "Use !chatgpt append-context 'message' to add to the context message for the server.";
+            helpText['chatgpt add-admin-role'] = "Use !chatgpt @role to give admin privileges to the specified role."
         }
 
         return helpText;
     }
 
-    /**
-     * Get required roles for usage.
-     * @return {Array} An empty array, as there are no required roles by default.
-     */
     getRequiredRoles() {
         return []; // No required roles by default
-    }
-
-    /**
-     * Set a context message for a server.
-     * @param {string} serverId - The Discord server ID.
-     * @param {string} message - The new context message to set.
-     */
-    setContextMessage(serverId, message) {
-        this.config[serverId].serverContext = message;
-    }
-
-    /**
-     * Append a message to the context for a server.
-     * @param {string} serverId - The Discord server ID.
-     * @param {string} message - The message to append to the existing context.
-     */
-    appendContextMessage(serverId, message) {
-        this.config[serverId].serverContext = `${this.config[serverId].serverContext} ${message}`
     }
 
     /**
@@ -74,32 +52,28 @@ class ChatGPTBot {
      * @return {boolean} True if member is an admin, otherwise false.
      */
     isAdmin(member) {
-        // Customize this function to check for admin role in your server
-        return member.permissions.has("ADMINISTRATOR");
+        const serverId = member.guild.id;
+        const serverConfig = this.config[serverId];
+    
+        // Check if the member has administrative permissions
+        const hasAdminPermission = member.permissions.has("ADMINISTRATOR");
+    
+        // If the server config exists and has a list of admin roles, check if the member has any of those roles
+        const hasConfigAdminRole = serverConfig && Array.isArray(serverConfig.adminRoles) &&
+                                   serverConfig.adminRoles.some(roleId => member.roles.cache.has(roleId));
+    
+        // Return true if the member has administrative permissions or an admin role configured in the server config
+        return hasAdminPermission || hasConfigAdminRole;
     }
 
-    /**
-     * Update the message history for a server.
-     * @param {string} serverId - The Discord server ID.
-     * @param {Object} userMessage - The user message object.
-     * @param {Object} systemMessage - The system message object.
-     */
-    updateMessageHistory(serverId, userMessage, systemMessage) {
-        if (!this.config[serverId].serverMessageHistory) {
-            this.config[serverId].serverMessageHistory = [];
-        }
+    async handleNewGuild(guild) {
+        const serverId = guild.id;
 
-        const messages = [
-            userMessage,
-            systemMessage
-        ];
-
-        // Add new messages to the beginning of the messages array
-        this.config[serverId].serverMessageHistory.unshift(...messages);
-
-        // If there are more than 15 user messages, remove the oldest ones
-        if (this.config[serverId].serverMessageHistory.length > 30) {
-            this.config[serverId].serverMessageHistory.length = 30;
+        // Check if there's already a config for the server
+        if (!this.config[serverId]) {
+            // Create a new server config and save it
+            this.config[serverId] = new ChatGPTBotConfig(serverId);
+            await this.repository.saveConfig(this.config[serverId]);
         }
     }
 
@@ -109,6 +83,7 @@ class ChatGPTBot {
      * @param {Object} config - The server config.
      */
     async handleMessage(msg, config) {
+
         if (msg.author.bot) return;
         if (!msg.content.toLowerCase().startsWith(`${config.prefix}chatgpt`)) return;
 
@@ -125,18 +100,18 @@ class ChatGPTBot {
         // Set the cooldown for the user
         this.cooldownManager.setCooldown(userId);
 
-        const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
-
+        // Load config or create one if we don't have one
         if (!this.config[serverId]) {
-            // Initialize the server config if it does not exist
-            this.config[serverId] = {
-              serverContext: this.defaultContext,
-              serverMessageHistory: [],
-              temperature: this.defaultTemperature,
-              max_tokens: this.defaultTokens,
-              n: this.defaultN
-            };
+            let loadedConfig = await this.repository.loadConfig(serverId);
+            this.config[serverId] = (loadedConfig != null) ? loadedConfig : new ChatGPTBotConfig(serverId);
+            console.log(`[${serverId}] Loaded Config...`);
+            console.log(this.config[serverId])
         }
+
+        // Start typing indicator in the channel
+        msg.channel.sendTyping();
+
+        const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
 
         // Check if the message is from an admin
         if (this.isAdmin(msg.member)) {
@@ -144,15 +119,32 @@ class ChatGPTBot {
             // Check if the message starts with 'set-context'
             if (query.toLowerCase().startsWith('set-context')) {
                 const contextMessage = query.slice(11).trim(); // Remove the 'set-context' prefix
-                this.setContextMessage(serverId, contextMessage);
+                this.config[serverId].serverContext = contextMessage;
+                this.config[serverId].serverMessageHistory = []; // Clear chat history when new context
+
+                this.repository.updateServerContext(serverId, contextMessage);
+                this.repository.updateServerMessageHistory(serverId, []);
                 msg.reply('Context message has been set.');
                 return;
             }
             // Check if the message starts with 'append-context'
             else if (query.toLowerCase().startsWith('append-context')) {
-                const contextMessage = query.slice(13).trim(); // Remove the 'append-context' prefix
-                this.appendContextMessage(serverId, contextMessage);
+                const contextMessage = query.slice(14).trim(); // Remove the 'append-context' prefix
+                this.config[serverId].appendServerContext(contextMessage);
+                this.repository.updateServerContext(serverId, this.config[serverId].serverContext);
                 msg.reply('Context message has been updated.');
+                return;
+            }
+            // Check if the message starts with 'add-admin-role'
+            else if (query.toLowerCase().startsWith('add-admin-role')) {
+                const roleId = query.match(/<@&(\d+)>/)[1]; // Extract roleId from <@&roleId>
+                if (roleId) {
+                    this.config[serverId].appendAdminRole(roleId);
+                    this.repository.updateAdminRoles(serverId, this.config[serverId].adminRoles);
+                    msg.reply(`Added <@&${roleId}> as an admin role.`);
+                } else {
+                    msg.reply('Invalid role. Please tag a valid role.');
+                }
                 return;
             }
         }
@@ -162,7 +154,10 @@ class ChatGPTBot {
         try {
             const response = await this.callChatGPT(formattedMessage, msg.guild.id);
             const formattedResponse = { role: 'system', content: response };
-            this.updateMessageHistory(msg.guild.id, formattedMessage, formattedResponse);
+            this.config[serverId].appendServerMessage(formattedMessage);
+            this.config[serverId].appendServerMessage(formattedResponse);
+
+            this.repository.updateServerMessageHistory(serverId, this.config[serverId].serverMessageHistory);
             msg.channel.send(response);
         } catch (error) {
             console.error('Error calling ChatGPT:', error);

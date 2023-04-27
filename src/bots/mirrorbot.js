@@ -2,7 +2,7 @@ let sh = require("shorthash");
 
 class MirrorBot {
 
-    constructor (client) {
+    constructor (client, databaseManager) {
         this.client = client
     }
 

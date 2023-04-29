@@ -15,27 +15,6 @@ class ChatGPTBotRepository {
     }
 
     /**
-     * Load all server configs from the database.
-     * @return {Promise<Array<ChatGPTBotConfig>>} An array of ChatGPTBotConfig instances.
-     */
-    async loadConfigs() {
-        const configs = await this.db.all('SELECT * FROM chatgptbot_config');
-        return configs.map(config => {
-            let chatGPTBotConfig = new ChatGPTBotConfig(config.serverId);
-
-            chatGPTBotConfig.serverContext = config.serverContext;
-            chatGPTBotConfig.serverMessageHistory = JSON.parse(config.serverMessageHistory);
-            chatGPTBotConfig.maxHistoryLength = config.maxHistoryLength;
-            chatGPTBotConfig.temperature = config.temperature;
-            chatGPTBotConfig.max_tokens = config.max_tokens;
-            chatGPTBotConfig.n = config.n;
-            chatGPTBotConfig.adminRoles = JSON.parse(config.adminRoles);
-
-            return chatGPTBotConfig;
-        });
-    }
-
-    /**
      * Load a single server config from the database.
      * @param {string} serverId - The Discord server ID.
      * @return {Promise<ChatGPTBotConfig>} A ChatGPTBotConfig instance.
@@ -54,6 +33,11 @@ class ChatGPTBotRepository {
         chatGPTBotConfig.max_tokens = config.max_tokens;
         chatGPTBotConfig.n = config.n;
         chatGPTBotConfig.adminRoles = JSON.parse(config.adminRoles);
+        chatGPTBotConfig.serverCost = config.serverCost;
+
+        if (typeof config.serverCost !== 'number' || isNaN(config.serverCost)) {
+            chatGPTBotConfig.serverCost = 0;
+        }
 
         return chatGPTBotConfig;
     }
@@ -72,8 +56,8 @@ class ChatGPTBotRepository {
         const query = `
             INSERT OR REPLACE INTO chatgptbot_config (
                 serverId, serverContext, serverMessageHistory, maxHistoryLength,
-                temperature, max_tokens, n, adminRoles
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                temperature, max_tokens, n, adminRoles, serverCost
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         `;
 
         await this.db.run(query, [
@@ -85,6 +69,7 @@ class ChatGPTBotRepository {
             config.max_tokens,
             config.n,
             adminRoles,
+            config.serverCost
         ]);
     }
 
@@ -198,6 +183,22 @@ class ChatGPTBotRepository {
         `;
 
         await this.db.run(query, [JSON.stringify(adminRoles), serverId]);
+    }
+
+    /**
+     * Update the server cost in the database.
+     * @param {string} serverId - The Discord server ID.
+     * @param {string} serverCost - The amount a server has spent on api calls.
+     * @return {Promise<void>}
+     */
+    async updateServerCost(serverId, serverCost) {
+        const query = `
+            UPDATE chatgptbot_config
+            SET serverCost = ?
+            WHERE serverId = ?;
+        `;
+
+        await this.db.run(query, [JSON.stringify(serverCost), serverId]);
     }
 
 }

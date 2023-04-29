@@ -20,6 +20,7 @@ class ChatGPTBot {
         this.repository = new ChatGPTBotRepository(databaseManager);
         this.config = {};
         this.secretContext = 'Multiple users will sending you messages and all messages will be prefixed with "user: " allowing you to know who sent the message. You will not respond in that same format.'
+        this.costPerToken = 0.00003;
     }
 
     /**
@@ -37,6 +38,7 @@ class ChatGPTBot {
             helpText['chatgpt set-context'] = "Use !chatgpt set-context 'message' to set the context message for the server.";
             helpText['chatgpt append-context'] = "Use !chatgpt append-context 'message' to add to the context message for the server.";
             helpText['chatgpt add-admin-role'] = "Use !chatgpt @role to give admin privileges to the specified role."
+            helpText['chatgpt show-costs'] = "Use !chatgpt show-costs to show how much this server has spent on API calls. Consider donating!"
         }
 
         return helpText;
@@ -146,6 +148,9 @@ class ChatGPTBot {
                     msg.reply('Invalid role. Please tag a valid role.');
                 }
                 return;
+            } if (query.toLowerCase().startsWith('show-costs')) {
+                msg.reply(`Current costs: \$${this.config[serverId].serverCost.toFixed(2)}. Consider donating!`);
+                return;
             }
         }
 
@@ -158,6 +163,7 @@ class ChatGPTBot {
             this.config[serverId].appendServerMessage(formattedResponse);
 
             this.repository.updateServerMessageHistory(serverId, this.config[serverId].serverMessageHistory);
+            this.repository.updateServerCost(serverId, this.config[serverId].serverCost);
             msg.channel.send(response);
         } catch (error) {
             console.error('Error calling ChatGPT:', error);
@@ -197,7 +203,11 @@ class ChatGPTBot {
 
         const response = await axios.post(url, data, { headers, timeout: 30000 });
 
+        // Calculate the total Cost of the api call
+        this.config[serverId].appendServerCost(response.data.usage.total_tokens * this.costPerToken);
+
         console.log(response.data.choices[0])
+
         return response.data.choices[0].message.content.trim();
     }
 }

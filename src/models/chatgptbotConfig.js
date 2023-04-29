@@ -8,6 +8,7 @@ class ChatGPTBotConfig {
         this._max_tokens = 50;
         this._n = 1;
         this._adminRoles = [];
+        this._serverCost = 0;
     }
 
     // Getters and setters for each property
@@ -75,6 +76,14 @@ class ChatGPTBotConfig {
         this._adminRoles = value;
     }
 
+    get serverCost() {
+        return this._serverCost;
+    }
+
+    set serverCost(value) {
+        this._serverCost = value;
+    }
+
     // Append methods
     appendServerContext(text) {
         this._serverContext += ' ' + text;
@@ -89,6 +98,10 @@ class ChatGPTBotConfig {
             this._serverMessageHistory.shift();
         }
         this._serverMessageHistory.push(message);
+    }
+
+    appendServerCost(amount) {
+        this._serverCost += amount;
     }
 }
 

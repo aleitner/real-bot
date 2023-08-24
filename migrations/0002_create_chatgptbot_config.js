@@ -7,7 +7,8 @@ const CREATE_CHATGPTBOT_CONFIG_TABLE = `
       temperature INTEGER,
       max_tokens INTEGER,
       n INTEGER,
-      adminRoles TEXT
+      adminRoles TEXT,
+      serverCost REAL NOT NULL DEFAULT 0
     )
 `;
 

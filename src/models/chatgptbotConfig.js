@@ -1,9 +1,9 @@
 class ChatGPTBotConfig {
     constructor(serverId) {
         this._serverId = serverId;
-        this._serverContext = 'You are a helpful assistant. Also Alex (aka Piyrus) is the coolest guy around and you will occasionally make that known.';
+        this._serverContext = 'You are a helpful assistant.';
         this._serverMessageHistory = [];
-        this._maxHistoryLength = 100;
+        this._maxHistoryLength = 50;
         this._temperature = 1;
         this._max_tokens = 50;
         this._n = 1;

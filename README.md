@@ -5,10 +5,7 @@ This project is a personal modular Discord bot that uses the discord.js library 
 ## Features
 
 - ChatGPTBot: A bot that interacts with OpenAI's ChatGPT API to provide AI-generated responses.
-- SentimentAnalysisBot: A bot for performing sentiment analysis on messages.
-- YanceyGangBot: Only YanceyGang knows.
 - MirrorBot: Mirror, mirror on the wall, who's the coolest of us all?
-- YanceyJunkBot: A bot for translating what Yancey says.
 
 ## Setup
 

@@ -105,10 +105,18 @@ class ChatGPTBot {
         // Load config or create one if we don't have one
         if (!this.config[serverId]) {
             let loadedConfig = await this.repository.loadConfig(serverId);
-            this.config[serverId] = (loadedConfig != null) ? loadedConfig : new ChatGPTBotConfig(serverId);
+            if (!loadedConfig) {
+                console.log(`Failed to load config for ${serverId}. Creating new config...`)
+                loadedConfig = new ChatGPTBotConfig(serverId)
+                await this.repository.saveConfig(loadedConfig);
+            }
+
+            this.config[serverId] = loadedConfig;
             console.log(`[${serverId}] Loaded Config...`);
-            console.log(this.config[serverId])
+            console.log(loadedConfig);
         }
+
+        let serverConfig = this.config[serverId];
 
         // Start typing indicator in the channel
         msg.channel.sendTyping();
@@ -121,35 +129,38 @@ class ChatGPTBot {
             // Check if the message starts with 'set-context'
             if (query.toLowerCase().startsWith('set-context')) {
                 const contextMessage = query.slice(11).trim(); // Remove the 'set-context' prefix
-                this.config[serverId].serverContext = contextMessage;
-                this.config[serverId].serverMessageHistory = []; // Clear chat history when new context
+                serverConfig.serverContext = contextMessage;
+                serverConfig.serverMessageHistory = []; // Clear chat history when new context
 
                 this.repository.updateServerContext(serverId, contextMessage);
                 this.repository.updateServerMessageHistory(serverId, []);
                 msg.reply('Context message has been set.');
+                console.log(`Server ${serverId}: Context Set. ${serverConfig.serverContext}`)
                 return;
             }
             // Check if the message starts with 'append-context'
             else if (query.toLowerCase().startsWith('append-context')) {
                 const contextMessage = query.slice(14).trim(); // Remove the 'append-context' prefix
-                this.config[serverId].appendServerContext(contextMessage);
-                this.repository.updateServerContext(serverId, this.config[serverId].serverContext);
+                serverConfig.appendServerContext(contextMessage);
+                this.repository.updateServerContext(serverId, serverConfig.serverContext);
                 msg.reply('Context message has been updated.');
+                console.log(`Server ${serverId}: Context Updated. ${serverConfig.serverContext}`)
                 return;
             }
             // Check if the message starts with 'add-admin-role'
             else if (query.toLowerCase().startsWith('add-admin-role')) {
                 const roleId = query.match(/<@&(\d+)>/)[1]; // Extract roleId from <@&roleId>
                 if (roleId) {
-                    this.config[serverId].appendAdminRole(roleId);
-                    this.repository.updateAdminRoles(serverId, this.config[serverId].adminRoles);
+                    serverConfig.appendAdminRole(roleId);
+                    this.repository.updateAdminRoles(serverId, serverConfig.adminRoles);
                     msg.reply(`Added <@&${roleId}> as an admin role.`);
                 } else {
                     msg.reply('Invalid role. Please tag a valid role.');
                 }
                 return;
-            } if (query.toLowerCase().startsWith('show-costs')) {
-                msg.reply(`Current costs: \$${this.config[serverId].serverCost.toFixed(2)}. Consider donating!`);
+            } 
+            else if (query.toLowerCase().startsWith('show-costs')) {
+                msg.reply(`Current costs: \$${serverConfig.serverCost.toFixed(2)}. Consider donating!`);
                 return;
             }
         }
@@ -159,11 +170,11 @@ class ChatGPTBot {
         try {
             const response = await this.callChatGPT(formattedMessage, msg.guild.id);
             const formattedResponse = { role: 'system', content: response };
-            this.config[serverId].appendServerMessage(formattedMessage);
-            this.config[serverId].appendServerMessage(formattedResponse);
+            serverConfig.appendServerMessage(formattedMessage);
+            serverConfig.appendServerMessage(formattedResponse);
 
-            this.repository.updateServerMessageHistory(serverId, this.config[serverId].serverMessageHistory);
-            this.repository.updateServerCost(serverId, this.config[serverId].serverCost);
+            this.repository.updateServerMessageHistory(serverId, serverConfig.serverMessageHistory);
+            this.repository.updateServerCost(serverId, serverConfig.serverCost);
             msg.channel.send(response);
         } catch (error) {
             console.error('Error calling ChatGPT:', error);
@@ -205,8 +216,6 @@ class ChatGPTBot {
 
         // Calculate the total Cost of the api call
         this.config[serverId].appendServerCost(response.data.usage.total_tokens * this.costPerToken);
-
-        console.log(response.data.choices[0])
 
         return response.data.choices[0].message.content.trim();
     }

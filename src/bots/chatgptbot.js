@@ -87,7 +87,22 @@ class ChatGPTBot {
     async handleMessage(msg, config) {
 
         if (msg.author.bot) return;
-        if (!msg.content.toLowerCase().startsWith(`${config.prefix}chatgpt`)) return;
+
+        const botMention = `<@${this.client.user.id}>`; 
+        const configCommand = `${config.prefix}chatgpt`;
+        let query = msg.content;
+
+        if (msg.content.toLowerCase().startsWith(configCommand)) {
+            query = msg.content.slice(8).trim();
+        } else if (msg.mentions.has(this.client.user.id)) {
+            console.log("mentioned...")
+            console.log(msg.content)
+            if (msg.content.toLowerCase().startsWith(botMention)){
+                query = msg.content.slice(botMention.length).trim();
+            }
+        } else {
+            return;
+        }
 
         const userId = msg.author.id;
         const serverId = msg.guild.id;
@@ -120,8 +135,6 @@ class ChatGPTBot {
 
         // Start typing indicator in the channel
         msg.channel.sendTyping();
-
-        const query = msg.content.slice(8).trim(); // Remove the '!chatgpt' prefix
 
         // Check if the message is from an admin
         if (this.isAdmin(msg.member)) {

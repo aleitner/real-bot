@@ -52,7 +52,7 @@ class BotManager {
 
         const serverConfig = await this.loadServerConfig(msg.guild.id);
         if (serverConfig.isUserBlacklisted(msg.author.id)) return;
-        if (!msg.content.toLowerCase().startsWith(serverConfig.prefix)) return;
+        if (!msg.content.toLowerCase().startsWith(serverConfig.prefix) && !msg.mentions.has(this.client.user.id)) return;
 
         const args = msg.content.slice(serverConfig.prefix.length).trim().split(/ +/);
         const command = args.shift().toLowerCase();

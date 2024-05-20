@@ -190,8 +190,20 @@ class ChatGPTBot {
             this.repository.updateServerCost(serverId, serverConfig.serverCost);
             msg.channel.send(response);
         } catch (error) {
-            console.error('Error calling ChatGPT:', error);
-            msg.channel.send('Sorry, I could not get a response from ChatGPT.');
+            // Log error details safely without exposing sensitive information
+            const errorDetails = {
+                message: error.message,
+                status: error?.response?.status,
+                statusText: error?.response?.statusText,
+            };
+            console.error('Error calling ChatGPT:', JSON.stringify(errorDetails, null, 2));
+        
+            let userMessage = 'Sorry, an error occurred while processing your request.';
+            if (error?.response?.status === 429) {
+                userMessage = 'The request cannot be processed at the moment due to too many requests. Please try again later.';
+            }
+
+            msg.channel.send(userMessage);
         }
     }
 
@@ -212,7 +224,7 @@ class ChatGPTBot {
         };
 
         const data = {
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [
                 {role: 'system', content: this.config[serverId].serverContext},
                 {role: 'system', content: this.secretContext},

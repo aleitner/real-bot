@@ -212,7 +212,7 @@ class ChatGPTBot {
         };
 
         const data = {
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [
                 {role: 'system', content: this.config[serverId].serverContext},
                 {role: 'system', content: this.secretContext},
